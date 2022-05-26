@@ -203,7 +203,7 @@ driver = webdriver.Chrome(chromedriver)
 # 크롤링으로 데이터를 얻어올 곳은 네이버로 진행하겠습니다.
 # 네이버 지도 검색창에 [~동 ~~식당]으로 검색하여 정확도를 높혀줍니다. 검색어를 미리 설정하여줍시다.
 select_df['네이버키워드'] = select_df['행정동명'] + "%20" +select_df['상호명'] #❗ "%20"은 띄어쓰기를 의미합니다.
-select_df['naver_map_url'] = ''
+select_df['naver_store_url'] = ''
 
 # 본격적으로 가게 상세페이지의 URL을 가져오도록 합니다.
 
@@ -237,10 +237,10 @@ driver.quit()
 
 
 #이때 수집한 것은 완전한 url이 아니라 url에 들어갈 ID (data-cid 라는 코드명으로 저장된 것)이므로, 온전한 URL로 만들어 줍니다.
-select_df['naver_map_url'] = "https://m.place.naver.com/restaurant/" + select_df['naver_map_url']
+select_df['naver_store_url'] = "https://m.place.naver.com/restaurant/" + select_df['naver_store_url']
 
 #url이 수집되지 않은 데이터는 제거해준다.
-select_df = select_df.loc[~select_df['naver_map_url'].isnull()]
+select_df = select_df.loc[~select_df['naver_store_url'].isnull()]
 
 
 #수집한 데이터를 csv 형태로 내보냅니다.
@@ -251,112 +251,56 @@ select_df.to_csv('c:/Users/j.park/Section3/real_project3/first_crawling.csv', in
 # #------------------------------------------❗ 문제점 발견 ❗------------------------------------------------
 # 수집한 데이터를 csv형태로 복원하여 살펴보던 도중 문제점을 발견했습니다.
 # 가게의 주소와 조사된 행정동명이 다른 경우입니다. (Ex: 신정상회는 csv 파일에서는 괴안동에 위치하지만, 실제로 찾아보니 소사본동이었습니다.)
-
+# ❗❗❗애초에 공공데이터에서 가져온 데이터가 잘못된 경우입니다❗❗❗
 
 
 
 # #------------------------------------------🔰🔰🔰🔰🔰 PART. 3 🔰🔰🔰🔰🔰------------------------------------------------
-# # PART.2를 통해 수집한 상세페이지 url을 다시 2개의 크롤러가 돌면서 블로그 리뷰와 별점 데이터등을 수집해줍시다.
-# # 각 데이터들을 미리 리스트에 담은 다음, 마지막에 데이터 프레임에 합쳐줍시다.
+# # PART.2를 통해 수집한 상세페이지 url이  담긴 데이터를 확인합니다.
+# # 이후 홈페이지에서 활용할 수 있는 데이터들을 크롤링하도록 합니다.(마찬가지로, 셀레니움을 이용합니다.)
 
-
-# 패키지 추가 : tqdm  (패키지 사용전 설치 필수 입니다.)
-from tqdm.notebook import tqdm
-
-
-
-naver_store_name_type = []  
-blog_review_list = []
-blog_review_count_list = []
-naver_star_review_list = []
-naver_visitor_review_list = []
-
-# 메인 드라이버 : 별점등을 크롤링
-driver = webdriver.Chrome(chromedriver)
-
-# 서브 드라이버 : 블로그 리뷰 텍스트를 리뷰 탭에 들어가서 크롤링
-sub_driver = webdriver.Chrome(chromedriver)
-
-
-# Part.2 에서 크롤링하여 모은 데이터를 가져옵니다.
-crawling_df = pd.read_csv('first_crawling.csv', encoding= 'cp949')
-
-
-def second_crawling(df):
-  for i, url in enumerate(tqdm(df)): #tqdm : 작업 과정의 진행상황을 살펴볼 수 있습니다. 
+def modified_data(df):
+  # 가게의 주소 및 별점을 가져오도록 합시다.
+  from selenium.webdriver.chrome.service import Service
+  from selenium.webdriver.common.by import B
+  
+  # 크롤링을 진행할 셀레니움의 드라이버 경로를 지정합니다.
+  s = Service(r'C:\Users\j.park\Section3\real_project3\chromedriver.exe')
+  
+  # 드라이버를 저장합니다.(경로 이용)
+  driver = webdriver.Chrome(service=s)
+  
+  # ✅df.column : naver_store_url 의 가게 url을 이용하여 데이터를 수집합니다.✅
+  # 우리가 음식점을 검색할 때 중요시하는 상황들은 무엇이 있을까요?🤔
+  
+  
+  # step 1. 가게의 주소를 가져와보도록 합시다.
+  store_address_list = []
+  
+  for i, url in enumerate((df['naver_store_url'])):
+    
+    # 드라이버에 연결할 주소를 가져옵니다.
     driver.get(url)
-    sub_driver.get(url+"/review/urgc")
-    time.sleep(2)
-  
-    try:
-      
-      # 간단한 정보 가져오기.
-      
-      # 가게의 유형 분류
-      naver_store_type = driver.find_element_by_css_selector("#_title > span._3ocDE").text
-      
-      # 블로그 리뷰 수
-      blog_review_count = driver.find_element_by_css_selector('#app-root > div > div > div > div.place_section.GCwOh > div._3uUKd > div._37n49 > span:nth-child(3) > a > em').text
-      
-      # 방문자 리뷰 수
-      visitor_review_count = driver.find_element_by_css_selector("#app-root > div > div > div > div.place_section.GCwOh > div._3uUKd > div._37n49 > span:nth-child(2) > a > em").text
-      
-      #가게 별점 점수
-      review_stars = driver.find_element_by_css_selector("#app-root > div > div > div > div.place_section.GCwOh > div._3uUKd > div._37n49 > span._1Y6hi._1A8_M > em").text
 
-      # 리뷰 텍스트 가져오기.
-      review_text_list = [] # 임시 선언
-      
-      # 네이버 지도 블로그 리뷰 탭
-      # 동적 웹사이트의 순서가 주문하기, 메뉴보기 등의 존재 여부로 다르기 때문에 css selector가 아니라 element 찾기로 진행한다.
-      # 즉 리뷰탭의 요소를 작성한다.
-      review_text_crawl_list = sub_driver.find_elements_by_class_name("_3Q5_9")
-      
-      
-      # find_elements_by_class_name 메소드를 통해  가져온 내용은 리스트로 저장된다.
-      # 리스트 타입을 풀어서 임시 데이터에 모아 두어야 한다.(for문 사용)
-      for review_crawing_data in review_text_crawl_list:
-        
-        # 임시로 선언된 review_text_list에 담기.
-        review_text_list.append(review_crawing_data.find_element_by_tag_name("WoYOw").text)
-      
-      #리스트에 저장된 텍스트(한 식당에 대한 여러 리뷰들)를 덩어리로 모아줍니다.
-      review_text = ",".join(review_text_list)
-      
-      
-      blog_review_list.append(review_text)
-      naver_store_name_type.append(naver_store_type)  
-      blog_review_count_list.append(blog_review_count)
-      naver_star_review_list.append(review_stars)
-      naver_visitor_review_list.append(visitor_review_count)
-      
-    # 리뷰가 없는 업체는 크롤링에 오류가 뜨므로 정리할 것. 
+    try:
+      #step 1: 가게의 '위도', '경도' 이외의 '주소'를 가져옵니다.
+      store_address = driver.find_element_by_css_selector('#app-root > div > div > div > div:nth-child(6) > div > div.place_section.no_margin._18vYz > div > ul > li._1M_Iz._1aj6- > div > a > span._2yqUQ').text
+      store_address_list.append(store_address)
+    
     except Exception as e1:
-      print(f'{i}행에 문제가 발생')
+      print(f'{i}행의 가게 주소를 찾을 수 없나봐요🤣')
+      store_address_list.append("null")
+  
+  df['store_address'] = store_address_list
+  df.to_csv('c:/Users/j.park/Section3/real_project3/add_address.csv',index = False, encoding = 'cp949')
+  return None 
+
+
+df1 = pd.read_csv('first_crawling.csv', index =False, encoding='cp949')
+modified_data(df1)
       
-      #리뷰가 없으므로  null을 임시로 넣어준다.
-      blog_review_list.append('null')
-      naver_store_name_type.append('null')
-      blog_review_count_list.append('null')
-      naver_star_review_list.append('null')
-      naver_visitor_review_list.append('null')
-      
-  driver.quit()
-  sub_driver.quit()
   
-  df['naver_store_type'] = naver_store_name_type
-  df['naver_star_point'] = naver_star_review_list
-  df['naver_blog_review_count'] = blog_review_count_list
-  df['naver_blog_review_text'] = blog_review_list
-  df['naver_visitor_review_count'] = naver_visitor_review_list
   
-  #수집한 데이터를 csv 형태로 내보냅니다.
-  df.to_csv('c:/Users/j.park/Section3/real_project3/second_crawling.csv', index = False, encoding= 'cp949')
   
-  print('mission complete❗') 
-  return None
-              
-        
-        
-        
-        
+
+
