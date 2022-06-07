@@ -55,8 +55,8 @@ def add_comment_only_one(df):
 
 # --------------------🔱 생성된 함수를 실행하기 위해선 다음과 같은 코드를 실행해야 합니다. 🔱------------------------
 
-# df1 = pd.read_csv('add_store_score.csv', encoding='cp949')
-# add_comment_only_one(df1)
+df1 = pd.read_csv('add_store_score.csv', encoding='cp949')
+add_comment_only_one(df1)
 
 
 
@@ -64,30 +64,30 @@ def add_comment_only_one(df):
 #이번에는 모든 리뷰를 가져올 수 있게 시도하여 봅시다.
 
 
-df1 = pd.read_csv('add_store_score.csv', encoding='cp949')
-# 셀레니움 드라이브 연결
-s = Service(r'C:\Users\j.park\Section3\real_project3\chromedriver.exe')
-comment_driver = webdriver.Chrome(service=s)
+# df1 = pd.read_csv('add_store_score.csv', encoding='cp949')
+# # 셀레니움 드라이브 연결
+# s = Service(r'C:\Users\j.park\Section3\real_project3\chromedriver.exe')
+# comment_driver = webdriver.Chrome(service=s)
 
-# 크롤링한 데이터를 모으기 위한 빈 리스트 생성
-visitor_comment_list = []
+# # 크롤링한 데이터를 모으기 위한 빈 리스트 생성
+# visitor_comment_list = []
 
 
-# 임시 저장소
-temporary_list = []
+# # 임시 저장소
+# temporary_list = []
 
-#df_column : df['naver_store_url'] 이용
-for i, url in enumerate(df1['naver_store_url']):
+# #df_column : df['naver_store_url'] 이용
+# for i, url in enumerate(df1['naver_store_url']):
           
-  # 크롤링할 리뷰가 존재하는 url을 드라이버에 연결합니다.
-  comment_driver.get(url+'/review/visitor?reviewItem=0')
-  #try:
+#   # 크롤링할 리뷰가 존재하는 url을 드라이버에 연결합니다.
+#   comment_driver.get(url+'/review/visitor?reviewItem=0')
+#   #try:
   
-    #전체 리뷰 텍스트 가져오기
-    #참고 : find_elements_by 로 가져오는 내용은 리스트로 저장됩니다. 
-  visitor_review =temporary_list.append(comment_driver.find_elements_by_class_name("WoYOw"))
+#     #전체 리뷰 텍스트 가져오기
+#     #참고 : find_elements_by 로 가져오는 내용은 리스트로 저장됩니다. 
+#   visitor_review =temporary_list.append(comment_driver.find_elements_by_class_name("WoYOw"))
 
-breakpoint()    
+# breakpoint()    
 #     for elements in visitor_review:
 #       reviews = ','.join(elements)
 #       visitor_comment_list.append(reviews)
@@ -111,3 +111,8 @@ breakpoint()
     
 #app-root > div > div > div > div:nth-child(7) > div > div.place_section._3fSeV > div > ul > li:nth-child(1) > div.faZHB > a > span  
 #app-root > div > div > div > div:nth-child(7) > div > div.place_section._3fSeV > div > ul > li:nth-child(2) > div.faZHB > a > span
+
+
+
+
+
