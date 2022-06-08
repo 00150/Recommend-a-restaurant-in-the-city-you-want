@@ -86,7 +86,7 @@ def add_url_column(df):
 # 참고 +) 가게의 '위도', '경도' 이외의 '주소'를 가져옵니다.
 
 
-def modified_data(df):
+def add_address(df):
   # 크롤링으로 찾은 가게의 주소를 저장할 빈 리스트를 생성합니다.
   store_address_list = []
   
@@ -160,23 +160,21 @@ def add_store_score(df):
 
 
 def add_review_text(df):
-    #크롤링으로 가져올 리뷰를 저장할 빈 리스트를 생성합니다.
-    comment_house = []
-    
-    #comment의 기본 값은 다음과 같습니다.
+
+    #기본값
     default_comment = ''
-      
-    # 크롤링을 진행할 셀레니움의 드라이버 경로를 지정합니다.
-    s = Service(r'C:\Users\j.park\Section3\real_project3\selfmade_function\chromedriver.exe')
-    
-    # 드라이버
-    review_driver = webdriver.Chrome(service=s)
-    
+
+    comment_house = []
+
+    chromedriver = r'C:\Users\j.park\Section3\real_project3\selfmade_function\chromedriver.exe'
+    driver = webdriver.Chrome(chromedriver)
+
+
     for i, url in enumerate(df['naver_store_url']):
-        review_driver.get(url +'/review/visitor')
+        
+        driver.get(url +'/review/visitor')
         time.sleep(1)
         
-            
         try:
             search_review = driver.find_elements(by=By.CLASS_NAME, value= "WoYOw")
             for comment in search_review:
@@ -184,16 +182,19 @@ def add_review_text(df):
                 default_comment = default_comment +'/' + x  
             comment_house.append(default_comment)
             default_comment = ''
+
             
-        
         except Exception as e1 :
             print(f'{i}행에 리뷰가 존재하지 않음')
+        
             ax = 'Null'
             comment_house.append(ax)    
-    
-    review_driver.quit()
+        
+
+    driver.quit()
+
     df['visitor_review'] = comment_house
     df_comment = df['visitor_review']
-    df.to_csv('c:/Users/j.park/practice/selenium_practice/crawling_completed.csv',index = False, encoding='utf-8')
+    df.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/add_url_address_score_review.csv', index = False, encoding= 'utf-8')
     
     return None

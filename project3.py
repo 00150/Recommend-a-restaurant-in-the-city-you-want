@@ -55,7 +55,7 @@ def mapping_address():
 
   
   #3-5. 원하는 지역으로 구성된 데이터프레임을 따로 저장합니다.
-  default_data.to_csv('c:/Users/j.park/Section3/real_project3/SELECT_REGION.csv', index = False, encoding= 'cp949')
+  default_data.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/SELECT_REGION.csv', index = False, encoding= 'cp949')
   
 
 
@@ -139,7 +139,8 @@ connect_sql()
 
 
 #1. 데이터 불러오기.
-select_df = pd.read_csv('SELECT_REGION.csv', encoding= 'cp949')
+scv_url = r'C:\Users\j.park\Section3\real_project3\create_csv\SELECT_REGION.csv'
+select_df = pd.read_csv(scv_url, encoding= 'cp949')
 
 
 #❗ 위에서 언급한 카테고리 데이터들의 모습은 다음과 같습니다.
@@ -156,6 +157,7 @@ select_df = pd.read_csv('SELECT_REGION.csv', encoding= 'cp949')
 
 #2. 카테고리 데이터들을 하나로 묶어주는 전처리를 진행합니다.
 select_df['합친데이터'] = select_df['업종중분류명'] + select_df['업종소분류명'] +select_df['표준산업분류명'] 
+
 
 #3. 하나로 뭉쳐진 카테고리 텍스트 데이터를 '피처 벡터화'하고 코사인 유사도를 계산하는 코드를 작성합니다.(사이킷런)
 import sklearn
@@ -179,125 +181,194 @@ place_simi_cate_sorted_ind = applied_cosine.argsort()[:, ::-1]
 #500개의 데이터가 있다면 1번은 자기 자신과 한 번 비교하고, 나머지 499개와 비교를 하게 됩니다.
 #이 데이터를 바탕으로 마지막 단계에서 최종 채점 단계에서 활용합니다.
 
-#4. 포털의 블로그 리뷰등을 이용하여 별점 데이터를 가져와 데이터로 활용한다.
-#   공공데이터로 확보한 상호명, 행정동 명을 검색어로 변환하여 포털에 검색하기.
-#   셀레늄 크롤러를 통해 검색 결과로 나온 블로그 리뷰, 블로그 별점 데이터 확보하기.
-
-#🔆 사용할 라이브러리를 불러옵니다.
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
-import time
-
-# 셀레니움을 사용하기 위해 다운로드한 크롬 드라이버의 경로를 작성합니다. 
-# ※ 현재 작업중에 있는 코드파일의 디렉토리에 함께 위치하는 것이 베스트인 것 같슴다..
-chromedriver = r'C:\Users\j.park\Section3\real_project3\chromedriver.exe'
-driver = webdriver.Chrome(chromedriver)
 
 
-# 크롤링으로 데이터를 얻어올 곳은 네이버로 진행하겠습니다.
-# 네이버 지도 검색창에 [~동 ~~식당]으로 검색하여 정확도를 높혀줍니다. 검색어를 미리 설정하여줍시다.
-select_df['네이버키워드'] = select_df['행정동명'] + "%20" +select_df['상호명'] #❗ "%20"은 띄어쓰기를 의미합니다.
+# 직접 작성한 패키지명과 모듈 이름입니다. 
+# 이 안에 작성된 함수를 사용하기 위해 불러옵니다.
+from selfmade_function import Handmade_selenium as fc
+
+
+# 만든 함수는 다음과 같습니다.
+"""
+📜 part1. 가게의 url을 컬럼으로 저장하는 함수를 생성
+add_url_column(df) / return None / csv 파일 반환 (add_url.csv)
+
+
+📜 part2. 가게의 주소를 크롤링하는 함수
+add_address(df) / return None / csv 파일 반환 (add_url_address.csv)
+
+
+📜 part3. 가게의 평점을 크롤링하는 함수
+add_store_score(df) / return None / csv 파일 반환 (add_url_address_score.csv)
+
+
+📜 part4. 가게의 리뷰를 크롤링하는 함수
+add_review_text(df)  / return None / csv 파일 반환
+"""
+
+
+
+
+# url을 컬럼으로 저장하는 함수를 사용하기 위해, 포털에 검색할 키워드를 정리합니다.
+select_df['네이버키워드'] = select_df['행정동명'] + "%20" + select_df['상호명']  #❗ "%20"은 띄어쓰기를 의미합니다.
 select_df['naver_store_url'] = ''
 
-# 본격적으로 가게 상세페이지의 URL을 가져오도록 합니다.
+# 이후, 함수를 사용합니다.
+# 가게의 url을 컬럼으로 생성합니다.
 
-for i, keyword in enumerate(select_df['네이버키워드'].tolist()):  #tolist를 이용, 객체 생성
-  print("이번에 찾을 키워드는 다음과 같습니다 :", i, f'/{select_df.shape[0]-1}행', keyword) #csv 파일의 첫번째 행에 컬럼이 담겨있으므로 제외.
+#📜 part1. 가게의 url을 컬럼으로 저장하는 함수를 생성
+fc.add_url_column(select_df)
+
+#📜 part2. 가게의 주소를 크롤링하는 함수
+scv_url = r'C:\Users\j.park\Section3\real_project3\create_csv\add_url.csv'
+df1 = pd.read_csv(scv_url, encoding= 'cp949')
+fc.add_address(df1)
+
+
+#📜 part3. 가게의 평점을 크롤링하는 함수
+scv_url = r'C:\Users\j.park\Section3\real_project3\create_csv\add_url_address.csv'
+df2 = pd.read_csv(scv_url, encoding= 'cp949')
+fc.add_store_score(df2)
+
+
+#📜 part4. 가게의 리뷰를 크롤링하는 함수
+scv_url = r'C:\Users\j.park\Section3\real_project3\create_csv\(add_url_address_score.csv'
+df3 = pd.read_csv(scv_url, encoding= 'cp949')
+fc.add_review_text(df3)
+
+
+
+#-------❗❗❗❗❗밑 부분은 제대로 작동되는 코드이지만, 작성한 패키지의 함수를 사용하기 위해 주석처리합니다.❗❗❗❗❗--------
+
+
+
+# #4. 포털의 블로그 리뷰등을 이용하여 별점 데이터를 가져와 데이터로 활용한다.
+# #   공공데이터로 확보한 상호명, 행정동 명을 검색어로 변환하여 포털에 검색하기.
+# #   셀레늄 크롤러를 통해 검색 결과로 나온 블로그 리뷰, 블로그 별점 데이터 확보하기.
+
+# #🔆 사용할 라이브러리를 불러옵니다.
+# from selenium import webdriver
+# from selenium.webdriver.common.keys import Keys
+# from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver.support import expected_conditions as EC
+# from selenium.common.exceptions import TimeoutException
+# from selenium.common.exceptions import NoSuchElementException
+# from selenium.webdriver.common.by import By
+# from selenium.webdriver.support.ui import Select
+# import time
+
+# # 셀레니움을 사용하기 위해 다운로드한 크롬 드라이버의 경로를 작성합니다. 
+# # ※ 현재 작업중에 있는 코드파일의 디렉토리에 함께 위치하는 것이 베스트인 것 같슴다..
+# chromedriver = r'C:\Users\j.park\Section3\real_project3\chromedriver.exe'
+# driver = webdriver.Chrome(chromedriver)
+
+
+# # 크롤링으로 데이터를 얻어올 곳은 네이버로 진행하겠습니다.
+# # 네이버 지도 검색창에 [~동 ~~식당]으로 검색하여 정확도를 높혀줍니다. 검색어를 미리 설정하여줍시다.
+# select_df['네이버키워드'] = select_df['행정동명'] + "%20" +select_df['상호명'] #❗ "%20"은 띄어쓰기를 의미합니다.
+# select_df['naver_store_url'] = ''
+
+
+
+
+#-------❗❗❗❗❗밑 부분은 제대로 작동되는 코드이지만, 작성한 패키지의 함수를 사용하기 위해 주석처리합니다.❗❗❗❗❗
+
+
+
+
+# # 본격적으로 가게 상세페이지의 URL을 가져오도록 합니다.
+
+# for i, keyword in enumerate(select_df['네이버키워드'].tolist()):  #tolist를 이용, 객체 생성
+#   print("이번에 찾을 키워드는 다음과 같습니다 :", i, f'/{select_df.shape[0]-1}행', keyword) #csv 파일의 첫번째 행에 컬럼이 담겨있으므로 제외.
     
-  try:
-      naver_map_search_url = f'https://m.map.naver.com/search2/search.naver?query={keyword}&sm=hty&style=v5'  # 현재 주소는 모바일입니다.
-      driver.get(naver_map_search_url)    
-      time.sleep(3.5)    
-      select_df.iloc[i,-1] = driver.find_element_by_css_selector(
-          '#ct > div.search_listview._content._ctList > ul > li:nth-child(1) > div.item_info > a.a_item.a_item_distance._linkSiteview').get_attribute('data-cid')
-      # 네이버 지도 시스템은 data-cid에 url 파라미터를 저장해두고 있었습니다.
-      # data-cid 번호를 뽑아두었다가 기본 url 템플릿에 넣어 최종적인 url을 완성하면 끝❗
+#   try:
+#       naver_map_search_url = f'https://m.map.naver.com/search2/search.naver?query={keyword}&sm=hty&style=v5'  # 현재 주소는 모바일입니다.
+#       driver.get(naver_map_search_url)    
+#       time.sleep(3.5)    
+#       select_df.iloc[i,-1] = driver.find_element_by_css_selector(
+#           '#ct > div.search_listview._content._ctList > ul > li:nth-child(1) > div.item_info > a.a_item.a_item_distance._linkSiteview').get_attribute('data-cid')
+#       # 네이버 지도 시스템은 data-cid에 url 파라미터를 저장해두고 있었습니다.
+#       # data-cid 번호를 뽑아두었다가 기본 url 템플릿에 넣어 최종적인 url을 완성하면 끝❗
   
-  except Exception as e1:
-      if "li:nth-child(1)" in str(e1):
-          try:
-              select_df.iloc[i,-1] =driver.find_element_by_css_selector("#ct > div.search_listview._content._ctList > ul > li:nth-child(1) > div.item_info > a.a_item.a_item_distance._linkSiteview")
-              time.sleep(1)
+#   except Exception as e1:
+#       if "li:nth-child(1)" in str(e1):
+#           try:
+#               select_df.iloc[i,-1] =driver.find_element_by_css_selector("#ct > div.search_listview._content._ctList > ul > li:nth-child(1) > div.item_info > a.a_item.a_item_distance._linkSiteview")
+#               time.sleep(1)
           
-          except Exception as e2:
-              print(e2)
-              select_df.iloc[i, -1] = np.nan
-              time.sleep(1)
+#           except Exception as e2:
+#               print(e2)
+#               select_df.iloc[i, -1] = np.nan
+#               time.sleep(1)
       
-      else:
-          pass                    
+#       else:
+#           pass                    
 
-driver.quit()
-
-
-#이때 수집한 것은 완전한 url이 아니라 url에 들어갈 ID (data-cid 라는 코드명으로 저장된 것)이므로, 온전한 URL로 만들어 줍니다.
-select_df['naver_store_url'] = "https://m.place.naver.com/restaurant/" + select_df['naver_store_url']
-
-#url이 수집되지 않은 데이터는 제거해준다.
-select_df = select_df.loc[~select_df['naver_store_url'].isnull()]
+# driver.quit()
 
 
-#수집한 데이터를 csv 형태로 내보냅니다.
-select_df.to_csv('c:/Users/j.park/Section3/real_project3/first_crawling.csv', index = False, encoding= 'cp949')
+# #이때 수집한 것은 완전한 url이 아니라 url에 들어갈 ID (data-cid 라는 코드명으로 저장된 것)이므로, 온전한 URL로 만들어 줍니다.
+# select_df['naver_store_url'] = "https://m.place.naver.com/restaurant/" + select_df['naver_store_url']
+
+# #url이 수집되지 않은 데이터는 제거해준다.
+# select_df = select_df.loc[~select_df['naver_store_url'].isnull()]
 
 
-
-# #------------------------------------------❗ 문제점 발견 ❗------------------------------------------------
-# 수집한 데이터를 csv형태로 복원하여 살펴보던 도중 문제점을 발견했습니다.
-# 가게의 주소와 조사된 행정동명이 다른 경우입니다. (Ex: 신정상회는 csv 파일에서는 괴안동에 위치하지만, 실제로 찾아보니 소사본동이었습니다.)
-# ❗❗❗애초에 공공데이터에서 가져온 데이터가 잘못된 경우입니다❗❗❗
+# #수집한 데이터를 csv 형태로 내보냅니다.
+# select_df.to_csv('c:/Users/j.park/Section3/real_project3/first_crawling.csv', index = False, encoding= 'cp949')
 
 
 
-# #------------------------------------------🔰🔰🔰🔰🔰 PART. 3 🔰🔰🔰🔰🔰------------------------------------------------
-# # PART.2를 통해 수집한 상세페이지 url이  담긴 데이터를 확인합니다.
-# # 이후 홈페이지에서 활용할 수 있는 데이터들을 크롤링하도록 합니다.(마찬가지로, 셀레니움을 이용합니다.)
+# # #------------------------------------------❗ 문제점 발견 ❗------------------------------------------------
+# # 수집한 데이터를 csv형태로 복원하여 살펴보던 도중 문제점을 발견했습니다.
+# # 가게의 주소와 조사된 행정동명이 다른 경우입니다. (Ex: 신정상회는 csv 파일에서는 괴안동에 위치하지만, 실제로 찾아보니 소사본동이었습니다.)
+# # ❗❗❗애초에 공공데이터에서 가져온 데이터가 잘못된 경우입니다❗❗❗
 
-def modified_data(df):
-  # 가게의 주소 및 별점을 가져오도록 합시다.
-  from selenium.webdriver.chrome.service import Service
-  from selenium.webdriver.common.by import B
+
+
+# # #------------------------------------------🔰🔰🔰🔰🔰 PART. 3 🔰🔰🔰🔰🔰------------------------------------------------
+# # # PART.2를 통해 수집한 상세페이지 url이  담긴 데이터를 확인합니다.
+# # # 이후 홈페이지에서 활용할 수 있는 데이터들을 크롤링하도록 합니다.(마찬가지로, 셀레니움을 이용합니다.)
+
+# def modified_data(df):
+#   # 가게의 주소 및 별점을 가져오도록 합시다.
+#   from selenium.webdriver.chrome.service import Service
+#   from selenium.webdriver.common.by import B
   
-  # 크롤링을 진행할 셀레니움의 드라이버 경로를 지정합니다.
-  s = Service(r'C:\Users\j.park\Section3\real_project3\chromedriver.exe')
+#   # 크롤링을 진행할 셀레니움의 드라이버 경로를 지정합니다.
+#   s = Service(r'C:\Users\j.park\Section3\real_project3\chromedriver.exe')
   
-  # 드라이버를 저장합니다.(경로 이용)
-  driver = webdriver.Chrome(service=s)
+#   # 드라이버를 저장합니다.(경로 이용)
+#   driver = webdriver.Chrome(service=s)
   
-  # ✅df.column : naver_store_url 의 가게 url을 이용하여 데이터를 수집합니다.✅
-  # 우리가 음식점을 검색할 때 중요시하는 상황들은 무엇이 있을까요?🤔
+#   # ✅df.column : naver_store_url 의 가게 url을 이용하여 데이터를 수집합니다.✅
+#   # 우리가 음식점을 검색할 때 중요시하는 상황들은 무엇이 있을까요?🤔
   
   
-  # step 1. 가게의 주소를 가져와보도록 합시다.
-  store_address_list = []
+#   # step 1. 가게의 주소를 가져와보도록 합시다.
+#   store_address_list = []
   
-  for i, url in enumerate((df['naver_store_url'])):
+#   for i, url in enumerate((df['naver_store_url'])):
     
-    # 드라이버에 연결할 주소를 가져옵니다.
-    driver.get(url)
+#     # 드라이버에 연결할 주소를 가져옵니다.
+#     driver.get(url)
 
-    try:
-      #step 1: 가게의 '위도', '경도' 이외의 '주소'를 가져옵니다.
-      store_address = driver.find_element_by_css_selector('#app-root > div > div > div > div:nth-child(6) > div > div.place_section.no_margin._18vYz > div > ul > li._1M_Iz._1aj6- > div > a > span._2yqUQ').text
-      store_address_list.append(store_address)
+#     try:
+#       #step 1: 가게의 '위도', '경도' 이외의 '주소'를 가져옵니다.
+#       store_address = driver.find_element_by_css_selector('#app-root > div > div > div > div:nth-child(6) > div > div.place_section.no_margin._18vYz > div > ul > li._1M_Iz._1aj6- > div > a > span._2yqUQ').text
+#       store_address_list.append(store_address)
     
-    except Exception as e1:
-      print(f'{i}행의 가게 주소를 찾을 수 없나봐요🤣')
-      store_address_list.append("null")
+#     except Exception as e1:
+#       print(f'{i}행의 가게 주소를 찾을 수 없나봐요🤣')
+#       store_address_list.append("null")
   
-  df['store_address'] = store_address_list
-  df.to_csv('c:/Users/j.park/Section3/real_project3/add_address.csv',index = False, encoding = 'cp949')
-  return None 
+#   df['store_address'] = store_address_list
+#   df.to_csv('c:/Users/j.park/Section3/real_project3/add_address.csv',index = False, encoding = 'cp949')
+#   return None 
 
 
-df1 = pd.read_csv('first_crawling.csv', index =False, encoding='cp949')
-modified_data(df1)
+# df1 = pd.read_csv('first_crawling.csv', index =False, encoding='cp949')
+# modified_data(df1)
       
   
   
