@@ -7,18 +7,24 @@
 생성된 함수는 다음과 같다.
 
 📜 part1. 가게의 url을 컬럼으로 저장하는 함수를 생성
-add_url_column(df) / return None / csv 파일 반환
+add_url_column(df) / return None / csv 파일 반환 (add_url.csv)
 
 
 📜 part2. 가게의 주소를 크롤링하는 함수
-add_address(df) / return None / csv 파일 반환
+add_address(df) / return None / csv 파일 반환 (add_url_address.csv)
 
 
 📜 part3. 가게의 평점을 크롤링하는 함수
-add_store_score(df) / return None / csv 파일 반환 
+add_store_score(df) / return None / csv 파일 반환 (add_url_address_score.csv)
 
 
 📜 part4. 가게의 리뷰를 크롤링하는 함수
-add_review_text(df)  / return None / csv 파일 반환
+add_review_text(df)  / return None / csv 파일 반환 (add_url_address_score_review.csv)
 
 
+📜 part5. 평점평가에 참여한 인원을 크롤링하는 함수
+count_score_of_store(df) return /csv 파일 반환 (add_total_count_voted.csv)
+
+
+📜 part6. 리뷰에 참여한 인원을 크롤링하는 함수
+count_score_of_store(df) return /csv 파일 반환 (add_comment_people_count.csv)
