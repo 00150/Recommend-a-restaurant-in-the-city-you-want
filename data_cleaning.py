@@ -63,6 +63,12 @@ df['평점에_참여한_인원'] = df['평점에_참여한_인원'].str.replace(
 
 
 
+df['방문자_리뷰'] =df['방문자_리뷰'].fillna('없음') 
 
+df.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/cleaned_Data.csv', index = False, encoding= 'utf-8')
 
+# ❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗파일 : cosine.py 에서 문제점 발견❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗
+# 코사인 유사도 적용시, 적용되는 데이터 컬럼에 np.nan의 값이 존재하면 안된다.
+# df['방문자_리뷰']에 적용하는 도중  
+# ValueError: np.nan is an invalid document, expected byte or unicode string. 의 오류가 떠서 값이 없는 부분은 '없음'으로 대체한다.
 
