@@ -1,4 +1,4 @@
-# 🔰 직접 생성한 함수.  '크롤링 : 셀레니움'
+# 🔰 직접 생성한 함수.  '크롤링 : 셀레니움', "db"
 
 
 
@@ -18,6 +18,10 @@ import time
 import pandas as pd
 import numpy as np
 import csv
+import os
+import sqlite3
+import psycopg2
+import logging
 
 
 
@@ -263,3 +267,206 @@ def count_review_of_store(df):
     df.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/add_comment_people_count.csv', index = False, encoding= 'utf-8')
     return None 
             
+
+
+
+#-----------------------------------------------PART 2 : 데이터 나누기.
+
+def dividing_data(df):
+    location = df[['상호명','행정동명', '위도', '경도', '가게_주소']]
+    property = df[['업종중분류명', '업종소분류명', '표준산업분류명','합친데이터']]
+    online = df[['네이버키워드','가게_URL']]
+    evaluation = df[['가게_평점','평점에_참여한_인원','방문자_리뷰', '리뷰_총인원']]
+
+    return location, property, online, evaluation
+#-----------------------------------------------PART 3 : 클라우드 데이터 서비스 연결
+
+
+# 클라우드 데이터 서비스 연결 : ElephantSQL
+#4. 이후 생성된 데이터를 클라우드 데이터 서비스에 저장하도록 합니다.
+#   Postgre 데이터베이스 서버와 연결 -> 클라우드 데이터베이스에서 생성한 elephantDB를 대상으로 합니다.
+#   데이터베이스에 연결할 때, 필요한 정보들을 사전에 변수에 담아 놓습니다.
+
+# ❗❗❗ 완전히 정제된 데이터 cleaned_Data.csv 파일을 DB에 넣는 작업입니다.
+#     완전히 정제된 cleaned_Data.csv 파일의 컬럼은 다음과 같습니다. 
+#     상호명,업종중분류명,업종소분류명,표준산업분류명,행정동명,위도,경도,합친데이터,
+#     네이버키워드,가게_URL,가게_주소,가게_평점,평점에_참여한_인원,방문자_리뷰,리뷰_총인원
+
+
+
+
+#4-1. 연결 & 테이블 생성 & 테이블 삽입을 진행할 함수를 작성합니다.
+
+def divided_data_insert_cloud():
+    
+    
+    # 연결 및 에러 제어 
+    host = 'castor.db.elephantsql.com'
+    user = 'iejeegfa'
+    password = 'qjLvYChc-r75m8BZoQFRgNzRWlhNfV4U'
+    database = 'iejeegfa'
+    
+    try:
+        connection = psycopg2.connect(
+            host = host,
+            user = user,
+            database = database,
+            password = password)
+        cur = connection.cursor()
+  
+    except:
+        logging.error("could not connect to rds")
+
+
+
+
+    # 1. 테이블 생성 : location - 위치 관련 데이터를 담은 테이블.
+    cur.execute("DROP TABLE IF EXISTS evaluation;")
+    cur.execute("DROP TABLE IF EXISTS online;")
+    cur.execute("DROP TABLE IF EXISTS property;")
+    cur.execute("DROP TABLE location CASCADE;")
+    cur.execute("DROP TABLE IF EXISTS location;")
+    
+    cur.execute("""CREATE TABLE location(
+        Id INTEGER PRIMARY KEY,
+        상호명 VARCHAR(128),
+        행정동명 VARCHAR(128),
+        위도 FLOAT8,
+        경도 FLOAT8,
+        가게_주소 VARCHAR(200)
+        );""")
+  
+    # 데이터 삽입.  
+    # 적용될 csv 파일의 위치 지정   
+    csv_file = r'C:\Users\j.park\Section3\real_project3\create_csv\csv_divide\location.csv'
+    
+    with open(csv_file, 'r', encoding='utf-8') as f:
+        try:
+            reader = csv.reader(f)
+            next(reader)
+            for id, row in enumerate(reader, start=1):
+                cur.execute("""INSERT INTO location(Id, 상호명,행정동명, 위도, 경도, 가게_주소) VALUES (%s, %s, %s, %s, %s, %s);""",
+                            (id, row[0],row[1], row[2], row[3], row[4]))
+            print('making table : location mission complete❗')      
+    
+        except:
+            logging.error("can't insert data")   
+
+
+  
+    # 2. 테이블 생성 : property - 판매 업종 관련 데이터를 담은 테이블.
+    cur.execute("DROP TABLE IF EXISTS property;")
+    cur.execute("""CREATE TABLE property(
+        Id INTEGER PRIMARY KEY,
+        업종중분류명 VARCHAR(128),
+        업종소분류명 VARCHAR(128),
+        표준산업분류명 VARCHAR(128),
+        합친데이터 VARCHAR(128),
+        FOREIGN KEY(Id) REFERENCES location(Id)
+        );""")
+  
+    # 데이터 삽입.  
+    # 적용될 csv 파일의 위치 지정   
+    csv_file = r'C:\Users\j.park\Section3\real_project3\create_csv\csv_divide\property.csv'
+  
+    with open(csv_file, 'r', encoding='utf-8') as f:
+        try:
+            reader = csv.reader(f)
+            next(reader)
+            for id, row in enumerate(reader, start=1):
+                cur.execute("""INSERT INTO property(Id, 업종중분류명, 업종소분류명, 표준산업분류명, 합친데이터) VALUES (%s, %s, %s, %s, %s);""",
+                            (id, row[0],row[1], row[2], row[3]))
+            print('making table : property mission complete❗')      
+    
+        except:
+            logging.error("can't insert data")
+
+
+       
+    # 3. 테이블 생성 : online - 가게 url 및 '네이버키워드' 를 담은 테이블.
+    cur.execute("DROP TABLE IF EXISTS online;")
+    cur.execute("""CREATE TABLE online(
+        Id INTEGER PRIMARY KEY,
+        네이버키워드 VARCHAR(128),
+        가게_URL VARCHAR(128),
+        FOREIGN KEY(Id) REFERENCES location(Id)
+        );""")
+  
+    # 데이터 삽입.  
+    # 적용될 csv 파일의 위치 지정   
+    csv_file = r'C:\Users\j.park\Section3\real_project3\create_csv\csv_divide\online.csv'
+    with open(csv_file, 'r',  encoding='utf-8') as f:
+        try:
+            reader = csv.reader(f)
+            next(reader)
+            for id, row in enumerate(reader, start=1):
+                cur.execute("""INSERT INTO online(Id, 네이버키워드,가게_URL) VALUES (%s, %s, %s);""",
+                            (id, row[0],row[1]))
+            print('making table : online mission complete❗')      
+    
+        except:
+            logging.error("can't insert data")   
+    
+
+
+    # 4. 테이블 생성 : evaluation - 가게 평가 관련 데이터를 담은 테이블
+    cur.execute("DROP TABLE IF EXISTS evaluation;")
+    cur.execute("""CREATE TABLE evaluation(
+        Id INTEGER PRIMARY KEY,
+        가게_평점 FLOAT8,
+        평점에_참여한_인원 INTEGER,
+        방문자_리뷰 VARCHAR(2048),
+        리뷰_총인원 INTEGER,
+        FOREIGN KEY(Id) REFERENCES location(Id)
+        );""")
+  
+    # 데이터 삽입.  
+    # 적용될 csv 파일의 위치 지정   
+    csv_file = r'C:\Users\j.park\Section3\real_project3\create_csv\csv_divide\evaluation.csv'
+  
+    with open(csv_file, 'r',  encoding='utf-8') as f:
+        #try:
+        reader = csv.reader(f)
+        next(reader)
+        for id, row in enumerate(reader, start=1):
+            cur.execute("""INSERT INTO evaluation(Id, 가게_평점, 평점에_참여한_인원, 방문자_리뷰, 리뷰_총인원) VALUES (%s, %s, %s, %s, %s);""",
+                        (id, row[0],row[1], row[2], row[3]))
+
+
+        print('making table : evaluation mission complete❗')      
+
+        #except:
+        #    logging.error("can't insert data")   
+    
+
+    connection.commit()
+    connection.close() 
+    
+    return None
+
+
+
+# --- elephant - sql 연결 코드---
+
+def connect_sql():
+    # ele-sql 연결 및 에러 제어 
+    # 2개의 값을 리턴합니다.
+    
+    host = 'castor.db.elephantsql.com'
+    user = 'iejeegfa'
+    password = 'qjLvYChc-r75m8BZoQFRgNzRWlhNfV4U'
+    database = 'iejeegfa'
+
+
+    try:
+        connection = psycopg2.connect(
+            host = host,
+            user = user,
+            database = database,
+            password = password)
+        cur = connection.cursor()
+
+    except:
+        logging.error("could not connect to rds")
+    
+    return cur, connection

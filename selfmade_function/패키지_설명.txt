@@ -1,4 +1,4 @@
-🔰패키지 : 크롤링(셀레니움 이용)
+🔰패키지 : 크롤링(셀레니움 이용) , 클라우드 데이터 서비스를 이용 데이터 삽입.
 
 
 코드작성시 한번에 크롤링을 적용하면 직관적이지 않다고 생각한다.
@@ -28,3 +28,17 @@ count_score_of_store(df) return /csv 파일 반환 (add_total_count_voted.csv)
 
 📜 part6. 리뷰에 참여한 인원을 크롤링하는 함수
 count_score_of_store(df) return /csv 파일 반환 (add_comment_people_count.csv)
+
+
+
+📜 part6. ElephantSQL 이용, 데이터 삽입.
+          정제된 csv 파일이 많은 데이터를 담고 있으므로 'DB 파티셔닝' 개념을 이용. 
+          각각 연관된 컬럼별로 데이터를 합쳐 총 4개의 테이블 생성.
+          함수로 생성된 총 4개의 테이블은 다음과 같다.
+          
+          1. location - 위치 관련 데이터를 담은 테이블  
+          2. property - 판매 업종 관련 데이터를 담은 테이블
+          3. online - 가게 url 및 '네이버키워드' 를 담은 테이블
+          4. evaluation -평가 관련 데이터를 담은 테이블
+
+divided_data_insert_cloud() => 총 4개의 데이터 프레임이 colud: DB 로 들어가게 된다.
