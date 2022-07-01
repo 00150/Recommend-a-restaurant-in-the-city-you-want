@@ -3,69 +3,86 @@
 # Handmade_function.py로 생성된 함수 또한 경로가 위에 언급한 위치로 바뀌었으니, 확인바랍니다.
 
 
-from selfmade_function import Handmade_function
+from selfmade_function import Handmade_function as Hf
 import pandas as pd
 import numpy as np
 import csv
 import os
 
 
-#1. 사용할 데이터의 경로 설정 및 데이터 가져오기.
-data = os.path.join(os.getcwd(),'경기상권정보.csv')
-df = pd.read_csv(data)
-
-
-#2. 음식에 해당하는 데이터만 출력 및 사용할 컬럼만 지정하기.
-df = df.loc[df['상권업종대분류명'] == '음식']
-
-columns =['상호명', '상권업종중분류명', '상권업종소분류명', '표준산업분류명', '행정동명', '위도', '경도']
-df = df[columns]
-
-
-#3. 입력하는 동을 기준으로, 원하는 데이터만 출력 및 따로 저장하기. 
-#3-1. 찾고자 하는 동의 이름을 입력 받습니다. 
-# ❗ 다음과 같은 지역에서 샘플 데이터를 얻어왔습니다.
-#  역삼동, 성남동, 망월동, 상대원동, 죽전동
-
-dong = input('찾고자하는 동네의 동 이름을 입력하세요😆 : ').replace(" ", '').split(',') 
-select_dong = dong
+url = r'C:\Users\j.park\Section3\real_project3\create_csv\traindata\SELECT_REGION.csv'
+select_df =pd.read_csv(url, encoding='cp949')
 
 
 
-# # ---> 함수를 생성하여 이용하겠습니다.
-def mapping_address():
-      #3-1. 찾고자 하는 동의 이름을 입력 받습니다.
-  #dong = input('찾고자하는 동네의 동 이름을 입력하세요😆 : ').replace(" ", '').split(',') # 역삼동, 성남동, 망월동, 상대원동, 죽전동
-  dong_name = select_dong
+# 만든 함수는 다음과 같습니다.
+"""
+📜 part1. 가게의 url을 컬럼으로 저장하는 함수를 생성
+add_url_column(df) / return None / csv 파일 반환 (add_url.csv)
 
-  #3-2. 기본 데이터 생성
-  default_data = pd.DataFrame(columns = {'상호명', '상권업종중분류명', '상권업종소분류명', '표준산업분류명', '행정동명', '위도', '경도'})  
 
-  #3-3. for문을 통해 기입한 동이름으로만 데이터를 따로 구성합니다.
-  for number in range(len(dong_name)):
-    add_df = df.loc[(df['행정동명'] == dong_name[number])]
-    default_data = pd.concat([add_df, default_data])
-  
-  #3-4.컬럼명 단순화
-  # 추려진 데이터를 확인해보면 컬럼명의 어휘가 조금 어렵습니다. 보다 이용에 편리하도록 편리한 컬럼명으로 바꿔줍니다.
-  default_data.columns = ['상호명',
-                          '업종중분류명',
-                          '업종소분류명',
-                          '표준산업분류명',
-                          '행정동명',
-                          '위도',
-                          '경도']
+📜 part2. 가게의 주소를 크롤링하는 함수
+add_address(df) / return None / csv 파일 반환 (add_url_address.csv)
 
-  
-  #3-5. 원하는 지역으로 구성된 데이터프레임을 따로 저장합니다. 
-  default_data.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/traindata/SELECT_REGION.csv', index = False, encoding= 'cp949')
-  
+
+📜 part3. 가게의 평점을 크롤링하는 함수
+add_store_score(df) / return None / csv 파일 반환 (add_url_address_score.csv)
+
+
+📜 part4. 가게의 리뷰를 크롤링하는 함수
+add_review_text(df)  / return None / csv 파일 반환 (add_url_address_score_review.csv)
+
+
+📜 part5. 평점평가에 참여한 인원을 크롤링하는 함수
+count_score_of_store(df) return /csv 파일 반환 (add_total_count_voted.csv)
+
+
+📜 part6. 리뷰에 참여한 인원을 크롤링하는 함수
+count_score_of_store(df) return /csv 파일 반환 (add_comment_people_count.csv)
+"""
 
 
 
+# # 크롤링으로 데이터를 얻어올 곳은 네이버로 진행하겠습니다.
+# # 네이버 지도 검색창에 [~동 ~~식당]으로 검색하여 정확도를 높혀줍니다. 검색어를 미리 설정하여줍시다.
+
+select_df['네이버키워드'] = select_df['행정동명'] + "%20" + select_df['상호명']  #❗ "%20"은 띄어쓰기를 의미합니다.
+select_df['naver_store_url'] = ''
+
+# 이후, 함수를 사용합니다.
+# 가게의 url을 컬럼으로 생성합니다.
+
+# #📜 part1. 가게의 url을 컬럼으로 저장하는 함수를 생성
+# Hf.add_url_column(select_df)
 
 
+# #📜 part2. 가게의 주소를 크롤링하는 함수
+# scv_url = r'C:\Users\j.park\Section3\real_project3\create_csv\traindata\add_url.csv'
+# df1 = pd.read_csv(scv_url, encoding= 'cp949')
+# Hf.add_address(df1)
 
 
-#-------- 이후 실행하여 봅시다. 
-mapping_address()
+# #📜 part3. 가게의 평점을 크롤링하는 함수
+# scv_url = r'C:\Users\j.park\Section3\real_project3\create_csv\traindata\add_url_address.csv'
+# df2 = pd.read_csv(scv_url, encoding= 'cp949')
+# Hf.add_store_score(df2)
+
+
+#📜 part4. 가게의 리뷰를 크롤링하는 함수
+scv_url = r'C:\Users\j.park\Section3\real_project3\create_csv\traindata\add_url_address_score.csv'
+df3 = pd.read_csv(scv_url, encoding= 'cp949')
+Hf.add_review_text(df3)
+
+
+# #📜 part5. 평점평가에 참여한 인원을 크롤링하는 함수
+# scv_url = r'C:\Users\j.park\Section3\real_project3\create_csv\traindata\add_url_address_score_review.csv'
+# df4 = pd.read_csv(scv_url, encoding= 'utf-8')
+# Hf.count_score_of_store(df4)
+
+
+# #📜 part6. 리뷰에 참여한 인원을 크롤링하는 함수
+# scv_url =r'C:\Users\j.park\Section3\real_project3\create_csv\traindata\add_total_count_voted.csv'
+# df5 = pd.read_csv(scv_url, encoding= 'cp949')
+# Hf.count_review_of_store(df5)
+
+

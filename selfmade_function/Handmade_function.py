@@ -1,4 +1,6 @@
 # 🔰 직접 생성한 함수.  '크롤링 : 셀레니움', "db"
+#❗ 6/30 기준으로 훈련 데이터를 생성합니다. csv를 내보내는 위치가 바뀌었으니, 확인바랍니다.
+#❗ traindata 폴더로 csv 파일의 경로가 수정되었습니다.
 
 
 
@@ -78,7 +80,7 @@ def add_url_column(df):
 
 
     #수집한 데이터를 csv 형태로 내보냅니다.
-    df.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/add_url.csv', index = False, encoding= 'cp949')
+    df.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/traindata/add_url.csv', index = False, encoding= 'cp949')
 
     return None
 
@@ -116,7 +118,7 @@ def add_address(df):
       
   driver.quit()            
   df['store_address'] = store_address_list
-  df.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/add_url_address.csv', index = False, encoding= 'cp949')
+  df.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/traindata/add_url_address.csv', index = False, encoding= 'cp949')
   return None 
 
 
@@ -153,7 +155,7 @@ def add_store_score(df):
       
     score_driver.quit()            
     df['store_score'] = store_score_list
-    df.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/add_url_address_score.csv', index = False, encoding= 'cp949')
+    df.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/traindata/add_url_address_score.csv', index = False, encoding= 'cp949')
     return None 
 
 
@@ -197,7 +199,7 @@ def add_review_text(df):
 
     df['visitor_review'] = comment_house
     df_comment = df['visitor_review']
-    df.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/add_url_address_score_review.csv', index = False, encoding= 'utf-8')
+    df.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/traindata/add_url_address_score_review.csv', index = False, encoding= 'utf-8')
     
     return None
 
@@ -233,7 +235,7 @@ def count_score_of_store(df):
        
     driver.quit()
     df['total_of_people_voted'] = search_score_all_list 
-    df.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/add_total_count_voted.csv', index = False, encoding= 'utf-8')
+    df.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/traindata/add_total_count_voted.csv', index = False, encoding= 'utf-8')
     return None 
 
 
@@ -264,7 +266,7 @@ def count_review_of_store(df):
     
     driver.quit()            
     df['리뷰 총인원'] = empty_list
-    df.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/add_comment_people_count.csv', index = False, encoding= 'utf-8')
+    df.to_csv('c:/Users/j.park/Section3/real_project3/create_csv/traindata/add_comment_people_count.csv', index = False, encoding= 'utf-8')
     return None 
             
 
